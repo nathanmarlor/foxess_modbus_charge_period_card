@@ -4,16 +4,30 @@ import {
   css,
 } from "https://unpkg.com/lit-element@2.0.1/lit-element.js?module";
 
-// (await loadCardHelpers()).createCardElement({ type: "entities", "entities": [] })
-// (await window.loadCardHelpers()).createRowElement({ type: "input-number-entity" })
-// (await window.loadCardHelpers()).createRowElement({ type: "input-datetime-entity" })
-console.log("loaded")
+// Get access to ha-time-input
+(await window.loadCardHelpers()).createRowElement({ type: "input-datetime-entity" })
 
 class FoxESSModbusChargePeriodCard extends LitElement {
+  #chargePeriods = []
+  #validationMessage = null
+
+  constructor() {
+    super()
+
+    this.#chargePeriods = [{ start: "00:00", end: "00:01", enableForceCharge: true, enableChargeFromGrid: true }]
+  }
+
   static get properties() {
     return {
       hass: {},
-      charge_periods: [],
+      "#chargePeriods": {
+        state: true,
+        type: Array
+      },
+      "#validationMessage": {
+        state: true,
+        type: String,
+      },
       config: {},
     };
   }
@@ -24,36 +38,72 @@ class FoxESSModbusChargePeriodCard extends LitElement {
 
   set hass(hass) {
     this._hass = hass
-    console.log(hass)
-
-    this.periods = [{ start: "00:00", end: "00:01", enable_force_charge: true, enable_charge_from_grid: false }]
+    // console.log(hass)
   }
 
   async setConfig(config) {
-    (await window.loadCardHelpers()).createRowElement({ type: "input-datetime-entity" })
     this.config = config;
   }
 
-  #renderChargePeriod(charge_period) {
+  #renderChargePeriod(chargePeriod) {
     return html`
-      <div class="toggle-row"><p>Enable force charge:</p><ha-switch .checked=${charge_period.enable_force_charge}></ha-switch></div>
-      <div class="toggle-row"><p>Enable charge from grid:</p><ha-switch .checked=${charge_period.enable_charge_from_grid}></ha-switch></div>
+      <div class="toggle-row">
+        <p>Enable force charge:</p>
+        <ha-switch
+          ?checked=${chargePeriod.enableForceCharge}
+          @change=${e => { chargePeriod.enableForceCharge = e.target.checked; this.#inputChanged() }}></ha-switch>
+      </div>
+      <div class="toggle-row">
+        <p>Enable charge from grid:</p>
+        <ha-switch
+          ?checked=${chargePeriod.enableChargeFromGrid}
+          @change=${e => { chargePeriod.enableChargeFromGrid = e.target.checked; this.#inputChanged() }}></ha-switch>
+      </div>
       <div class="range-row">
-        <ha-time-input .value=${charge_period.start} .locale=${this.hass.locale}></ha-time-input>
+        <ha-time-input
+          .value=${chargePeriod.start}
+          .locale=${this.hass.locale}
+          ?disabled=${!chargePeriod.enableForceCharge}
+          @value-changed=${e => { chargePeriod.start = e.target.value; this.#inputChanged() }}></ha-time-input>
         <div class="time-separator"></div>
-        <ha-time-input .value=${charge_period.end} .locale=${this.hass.locale}></ha-time-input>
+        <ha-time-input
+          .value=${chargePeriod.end}
+          .locale=${this.hass.locale}
+          ?disabled=${!chargePeriod.enableForceCharge}
+          @value-changed=${e => { chargePeriod.end = e.target.value; this.#inputChanged() }}></ha-time-input>
       </div>
     `;
   }
 
   render() {
     return html`
-      <ha-card header="Test">
+      <ha-card header="Charge Windows">
         <div class="card-content">
-          ${this.#renderChargePeriod(this.periods[0])}
+          ${this.#renderChargePeriod(this.#chargePeriods[0])}
+
+          <p>${this.#validationMessage}</p>
+
+          <div class="button-row">
+            <mwc-button label="Reset"></mwc-button>
+            <mwc-button
+              label="Save"
+              ?disabled=${this.#validationMessage != null}></mwc-button>
+          </div>
         </div>
       </ha-card>
     `;
+  }
+
+  #inputChanged() {
+    console.log(this.#chargePeriods);
+    this.requestUpdate();
+
+    if (this.#chargePeriods[0].enableForceCharge) {
+      this.#validationMessage = "Test...";
+    }
+    else {
+      this.#validationMessage = null;
+    }
   }
 
   static get styles() {
@@ -81,6 +131,11 @@ class FoxESSModbusChargePeriodCard extends LitElement {
         width: 30px;
         background-color: #ededf0;
         margin: 0 10px;
+      }
+      .button-row {
+        margin-top: 20px;
+        display: flex;
+        justify-content: flex-end;
       }
     `;
   }
