@@ -1,0 +1,8 @@
+default_config:
+logger:
+  default: info
+lovelace:
+  mode: yaml
+  resources:
+    - url: /local/foxess-modbus-charge-period-card.js
+      type: module

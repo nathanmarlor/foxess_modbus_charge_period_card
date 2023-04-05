@@ -1,0 +1,7 @@
+views:
+  - cards:
+      # - type: entities
+      #   entities:
+      #     - input_datetime.test_time
+      - type: custom:foxess-modbus-charge-period-card
+        name: FoxESS Modbus Charge Period Card

@@ -1,0 +1,33 @@
+// See https://aka.ms/vscode-remote/devcontainer.json for format details.
+{
+  "image": "ghcr.io/ludeeus/devcontainer/integration:stable",
+  "name": "Lovelace card development",
+  "appPort": [
+    "9123:8123"
+  ],
+  "mounts": [
+    "source=${localWorkspaceFolder}/src/foxess-modbus-charge-period-card.js,target=/config/www/foxess-modbus-charge-period-card.js,type=bind"
+  ],
+  "postCreateCommand": "container install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bierner.lit-html",
+        "runem.lit-plugin",
+        "auchenberg.vscode-browser-preview",
+        "davidanson.vscode-markdownlint",
+        "redhat.vscode-yaml"
+      ],
+      "settings": {
+        "files.eol": "\n",
+        "editor.tabSize": 4,
+        "editor.formatOnPaste": false,
+        "editor.formatOnSave": true,
+        "editor.formatOnType": true,
+        "files.trimTrailingWhitespace": true
+      }
+    }
+  }
+}
