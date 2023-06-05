@@ -1,0 +1,8 @@
+{
+  "files.eol": "\n",
+  "editor.tabSize": 4,
+  "editor.formatOnPaste": false,
+  "editor.formatOnSave": true,
+  "editor.formatOnType": true,
+  "files.trimTrailingWhitespace": true
+}
