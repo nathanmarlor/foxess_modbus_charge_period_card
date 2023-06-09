@@ -1,0 +1,4 @@
+[submodule "foxess_modbus"]
+	path = foxess_modbus
+	url = ../foxess_modbus.git
+	update = rebase
