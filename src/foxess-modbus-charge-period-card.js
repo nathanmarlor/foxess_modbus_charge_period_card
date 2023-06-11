@@ -38,7 +38,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
 
   set hass(hass) {
     this._hass = hass
-    // console.log(hass)
+    hass.callWS({"type": "foxess_modbus/get_charge_periods", "inverter": ""}).then(x => console.log(x))
   }
 
   async setConfig(config) {
