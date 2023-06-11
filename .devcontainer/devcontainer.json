@@ -10,7 +10,7 @@
     "source=${localWorkspaceFolder}/src,target=/config/www,type=bind",
     "source=${localWorkspaceFolder}/foxess_modbus/custom_components/foxess_modbus,target=/config/custom_components/foxess_modbus,type=bind"
   ],
-  "postCreateCommand": ".devcontainer/setup",
+  "postCreateCommand": ".devcontainer/setup.sh",
   "customizations": {
     "vscode": {
       "extensions": [
