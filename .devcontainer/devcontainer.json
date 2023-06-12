@@ -3,7 +3,7 @@
   "image": "mcr.microsoft.com/vscode/devcontainers/python:0-3.10-bullseye",
   "name": "Foxess Modbus Charge Period Card Container",
   "appPort": [
-    "9123:8123"
+    "8123:8123"
   ],
   "mounts": [
     "source=${localWorkspaceFolder}/config,target=/config,type=bind",

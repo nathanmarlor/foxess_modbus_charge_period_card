@@ -6,3 +6,5 @@ lovelace:
   resources:
     - url: /local/foxess-modbus-charge-period-card.js
       type: module
+
+debugpy:
