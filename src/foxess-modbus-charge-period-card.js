@@ -48,17 +48,27 @@ class FoxESSModbusChargePeriodCard extends LitElement {
 
   set hass(hass) {
     this.#hass = hass;
-    this.#onHassChanged();
+    this.#onInputsChanged();
   }
 
   async setConfig(config) {
-    this.config = config;
+    this.#inverterId = config.inverter || '';
+    this.#entityIds = null;
+    await this.#onInputsChanged();
   }
 
-  async #onHassChanged() {
+  async #onInputsChanged() {
     const oldLoadedChargePeriods = this.#loadedChargePeriods;
     await this.#loadChargePeriods();
     this.#updateUserChargePeriods(oldLoadedChargePeriods);
+  }
+
+  static getConfigElement() {
+    return document.createElement('foxess-modbus-charge-period-card-editor');
+  }
+
+  static getStubConfig() {
+    return { inverter: '' };
   }
 
   async #loadEntityIds() {
@@ -143,7 +153,6 @@ class FoxESSModbusChargePeriodCard extends LitElement {
           && oldLoadedChargePeriods[i].enableForceCharge === this._userChargePeriods[i].enableForceCharge
           && oldLoadedChargePeriods[i].enableChargeFromGrid === this._userChargePeriods[i].enableChargeFromGrid)
       ) {
-        console.log(`Pushing charge period ${i}`);
         newUserChargePeriods.push({
           start: loadedPeriod.start,
           end: loadedPeriod.end,
@@ -151,7 +160,6 @@ class FoxESSModbusChargePeriodCard extends LitElement {
           enableChargeFromGrid: loadedPeriod.enableChargeFromGrid,
         });
       } else {
-        console.log(`Retaining charge period ${i}`);
         newUserChargePeriods.push(this._userChargePeriods[i]);
       }
     }
@@ -260,7 +268,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
   #renderChargePeriod(index, chargePeriod) {
     const validationMessage = chargePeriod.validationMessage == null
       ? null
-      : html`<p class="validation-message">${chargePeriod.validationMessage}</p>`;
+      : html`<p class="error-message">${chargePeriod.validationMessage}</p>`;
     return html`
       <fieldset>
         <legend>Charge Period ${index + 1}</legend>
@@ -296,7 +304,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
 
   #renderError() {
     if (this._loadError != null) {
-      return html`<p>${this._loadError}</p>`;
+      return html`<p class="error-message">${this._loadError}</p>`;
     }
 
     return html`<p>Unable to load charge periods. Is foxess-modbus installed and configured?</p>`;
@@ -351,7 +359,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
         background-color: #ededf0;
         margin: 0 10px;
       }
-      .validation-message {
+      .error-message {
         color: var(--error-color);
       }
       .button-row {
@@ -361,5 +369,68 @@ class FoxESSModbusChargePeriodCard extends LitElement {
     `;
   }
 }
-
 customElements.define('foxess-modbus-charge-period-card', FoxESSModbusChargePeriodCard);
+
+class FoxESSModbusChargePeriodCardEditor extends LitElement {
+  #hass = null;
+
+  #schema = [{
+    name: 'inverter',
+    selector: {
+      device: {
+        integration: 'foxess_modbus',
+        entity:
+        {
+          domain: 'binary_sensor',
+          device_class: 'power',
+        },
+      },
+    },
+  }];
+
+  get hass() {
+    return this.#hass;
+  }
+
+  set hass(hass) {
+    this.#hass = hass;
+  }
+
+  setConfig(config) {
+    this._config = config;
+  }
+
+  #valueChanged(evt) {
+    const event = new Event('config-changed', {
+      bubbles: true,
+      composed: true,
+    });
+    event.detail = { config: evt.detail.value };
+    this.dispatchEvent(event);
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  #computeLabel() {
+    return 'Inverter';
+  }
+
+  render() {
+    return html`
+      <ha-form
+        .hass="${this.#hass}"
+        .schema="${this.#schema}"
+        .data="${this._config}"
+        .computeLabel="${this.#computeLabel}"
+        @value-changed="${this.#valueChanged}"></ha-form>
+    `;
+  }
+}
+customElements.define('foxess-modbus-charge-period-card-editor', FoxESSModbusChargePeriodCardEditor);
+
+window.customCards = window.customCards || [];
+window.customCards.push({
+  type: 'foxess-modbus-charge-period-card',
+  name: 'FoxESS - Modbus: Charge Period Card',
+  preview: true, // Optional - defaults to false
+  description: 'Set charge periods on your FoxESS inverter',
+});
