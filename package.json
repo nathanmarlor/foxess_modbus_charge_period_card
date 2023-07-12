@@ -1,0 +1,9 @@
+{
+  "name": "foxess_modbus_charge_period_card",
+  "version": "0.0.0",
+  "devDependencies": {
+    "eslint": "^8.44.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.27.5"
+  }
+}

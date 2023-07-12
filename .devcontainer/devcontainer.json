@@ -2,6 +2,11 @@
 {
   "image": "mcr.microsoft.com/vscode/devcontainers/python:0-3.10-bullseye",
   "name": "Foxess Modbus Charge Period Card Container",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "latest"
+    }
+  },
   "appPort": [
     "8123:8123"
   ],

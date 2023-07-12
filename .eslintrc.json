@@ -1,0 +1,26 @@
+{
+    "env": {
+        "browser": true,
+        "es2021": true
+    },
+    "extends": "airbnb-base",
+    "parserOptions": {
+        "ecmaVersion": "latest"
+    },
+    "rules": {
+        "no-underscore-dangle": [
+            "error",
+            {
+                "allowAfterThis": true
+            }
+        ],
+        "import/no-unresolved": "off",
+        "import/extensions": "off",
+        "no-param-reassign": [
+            "error",
+            {
+                "props": false
+            }
+        ]
+    }
+}
