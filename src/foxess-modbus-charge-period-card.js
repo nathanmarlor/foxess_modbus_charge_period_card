@@ -12,6 +12,8 @@ class FoxESSModbusChargePeriodCard extends LitElement {
 
   #entityIds = null;
 
+  #loadedChargePeriods = [];
+
   #inverterId = '';
 
   static get properties() {
@@ -20,7 +22,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
       _loadError: {
         state: true,
       },
-      _chargePeriods: {
+      _userChargePeriods: {
         state: true,
         type: Array,
       },
@@ -36,7 +38,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
     super();
 
     this._loadError = null;
-    this._chargePeriods = null;
+    this._userChargePeriods = null;
     this._validationMessage = null;
   }
 
@@ -46,18 +48,27 @@ class FoxESSModbusChargePeriodCard extends LitElement {
 
   set hass(hass) {
     this.#hass = hass;
-    this.#loadChargePeriods();
+    this.#onHassChanged();
   }
 
   async setConfig(config) {
     this.config = config;
   }
 
+  async #onHassChanged() {
+    const oldLoadedChargePeriods = this.#loadedChargePeriods;
+    await this.#loadChargePeriods();
+    this.#updateUserChargePeriods(oldLoadedChargePeriods);
+  }
+
   async #loadEntityIds() {
     if (this.#entityIds == null) {
       this._loadError = null;
       try {
-        const result = await this.#hass.callWS({ type: 'foxess_modbus/get_charge_periods', inverter: this.#inverterId });
+        const result = await this.#hass.callWS({
+          type: 'foxess_modbus/get_charge_periods',
+          inverter: this.#inverterId,
+        });
         this.#entityIds = result.charge_periods.map((period) => ({
           periodStartEntityId: period.period_start_entity_id,
           periodEndEntityId: period.period_end_entity_id,
@@ -74,35 +85,9 @@ class FoxESSModbusChargePeriodCard extends LitElement {
     }
   }
 
-  async #handleSave() {
-    if (this.#hass == null) {
-      return;
-    }
-
-    const data = [];
-    for (const chargePeriod of this._chargePeriods) {
-      const period = {
-        enable_force_charge: chargePeriod.enableForceCharge,
-        enable_charge_from_grid: chargePeriod.enableChargeFromGrid,
-      };
-      if (chargePeriod.enableForceCharge) {
-        period.start = chargePeriod.start;
-        period.end = chargePeriod.end;
-      }
-      data.push(period);
-    }
-
-    try {
-      await this.#hass.callService('foxess_modbus', 'update_all_charge_periods', { inverter: this.#inverterId, charge_periods: data });
-    } catch (error) {
-      console.log(error);
-      this._validationMessage = error.message;
-    }
-  }
-
   async #loadChargePeriods() {
     if (this.#hass == null) {
-      this._chargePeriods = null;
+      this.#loadedChargePeriods = null;
       return;
     }
 
@@ -122,7 +107,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
     }
 
     if (this.#entityIds == null) {
-      this._chargePeriods = null;
+      this.#loadedChargePeriods = null;
       return;
     }
     const chargePeriods = [];
@@ -134,17 +119,90 @@ class FoxESSModbusChargePeriodCard extends LitElement {
         enableChargeFromGrid: this.#hass.states[chargePeriod.enableChargeFromGridEntityId].state === 'on',
       });
     }
-    this._chargePeriods = chargePeriods;
+
+    this.#loadedChargePeriods = chargePeriods;
+  }
+
+  #updateUserChargePeriods(oldLoadedChargePeriods) {
+    if (this.#loadedChargePeriods == null) {
+      this._userChargePeriods = null;
+      return;
+    }
+
+    const newUserChargePeriods = [];
+
+    for (let i = 0; i < this.#loadedChargePeriods.length; i++) {
+      const loadedPeriod = this.#loadedChargePeriods[i];
+      // If the user hasn't modified this charge period, update it
+      if (this._userChargePeriods == null
+        || i >= this._userChargePeriods.length
+        || oldLoadedChargePeriods == null
+        || i >= oldLoadedChargePeriods.length
+        || (oldLoadedChargePeriods[i].start === this._userChargePeriods[i].start
+          && oldLoadedChargePeriods[i].end === this._userChargePeriods[i].end
+          && oldLoadedChargePeriods[i].enableForceCharge === this._userChargePeriods[i].enableForceCharge
+          && oldLoadedChargePeriods[i].enableChargeFromGrid === this._userChargePeriods[i].enableChargeFromGrid)
+      ) {
+        console.log(`Pushing charge period ${i}`);
+        newUserChargePeriods.push({
+          start: loadedPeriod.start,
+          end: loadedPeriod.end,
+          enableForceCharge: loadedPeriod.enableForceCharge,
+          enableChargeFromGrid: loadedPeriod.enableChargeFromGrid,
+        });
+      } else {
+        console.log(`Retaining charge period ${i}`);
+        newUserChargePeriods.push(this._userChargePeriods[i]);
+      }
+    }
+
+    this._userChargePeriods = newUserChargePeriods;
+  }
+
+  async #handleSave() {
+    if (this.#hass == null) {
+      return;
+    }
+
+    const data = [];
+    for (const chargePeriod of this._userChargePeriods) {
+      const period = {
+        enable_force_charge: chargePeriod.enableForceCharge,
+        enable_charge_from_grid: chargePeriod.enableChargeFromGrid,
+      };
+      if (chargePeriod.enableForceCharge) {
+        period.start = chargePeriod.start;
+        period.end = chargePeriod.end;
+      }
+      data.push(period);
+    }
+
+    try {
+      await this.#hass.callService('foxess_modbus', 'update_all_charge_periods', {
+        inverter: this.#inverterId,
+        charge_periods: data,
+      });
+    } catch (error) {
+      console.log(error);
+      this._validationMessage = error.message;
+    }
+  }
+
+  #handleReset() {
+    this._userChargePeriods = null;
+    this.#updateUserChargePeriods();
   }
 
   #renderChargePeriods() {
     return html`
-      ${this._chargePeriods.map((x) => this.#renderChargePeriod(x))}
+      ${this._userChargePeriods.map((x) => this.#renderChargePeriod(x))}
 
       <p>${this._validationMessage}</p>
 
       <div class="button-row">
-        <mwc-button label="Reset"></mwc-button>
+        <mwc-button
+          label="Reset"
+          @click=${this.#handleReset}></mwc-button>
         <mwc-button
           label="Save"
           ?disabled=${this._validationMessage != null}
@@ -192,7 +250,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
   }
 
   render() {
-    const content = this._chargePeriods == null
+    const content = this._userChargePeriods == null
       ? this.#renderError()
       : this.#renderChargePeriods();
     return html`

@@ -11,6 +11,13 @@
         "import/no-unresolved": "off",
         "import/extensions": "off",
         "no-restricted-syntax": "off",
+        "no-plusplus": "off",
+        "max-len": [
+            "error",
+            {
+                "code": 120
+            }
+        ],
         "no-param-reassign": [
             "error",
             {
