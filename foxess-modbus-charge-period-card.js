@@ -295,17 +295,22 @@ class FoxESSModbusChargePeriodCard extends LitElement {
             @change=${(e) => { chargePeriod.enableChargeFromGrid = e.target.checked; this.#inputChanged(); }}></ha-switch>
         </div>
         <div class="range-row">
+          <div class="range-item"><span class="time-label">From:</span>
           <ha-time-input
             .value=${chargePeriod.start}
             .locale=${this.hass.locale}
             ?disabled=${!chargePeriod.enableForceCharge}
             @value-changed=${(e) => { chargePeriod.start = e.target.value; this.#inputChanged(); }}></ha-time-input>
+          </div>
           <div class="time-separator"></div>
-          <ha-time-input
-            .value=${chargePeriod.end}
-            .locale=${this.hass.locale}
-            ?disabled=${!chargePeriod.enableForceCharge}
-            @value-changed=${(e) => { chargePeriod.end = e.target.value; this.#inputChanged(); }}></ha-time-input>
+          <div class="range-row">
+          <div class="range-item"><span class="time-label">To:</span>
+            <ha-time-input
+              .value=${chargePeriod.end}
+              .locale=${this.hass.locale}
+              ?disabled=${!chargePeriod.enableForceCharge}
+              @value-changed=${(e) => { chargePeriod.end = e.target.value; this.#inputChanged(); }}></ha-time-input>
+          </div>
         </div>
         ${validationMessage}
       </fieldset>
@@ -349,6 +354,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
         min-width: 0;
         border: 1px solid lightgray;
         border-radius: 4px;
+        container-type: inline-size;
       }
       legend {
         padding: 2px 5px;
@@ -366,14 +372,32 @@ class FoxESSModbusChargePeriodCard extends LitElement {
         margin: 8px;
         justify-content: center;
         align-items: center;
-        flex-flow: row wrap;
         row-gap: 5px;
       }
-      .time-separator {
+      .range-row .time-label {
+        display: none;
+      }
+      .range-row .time-separator {
         height: 1px;
         width: 30px;
         background-color: #ededf0;
         margin: 0 10px;
+      }
+      @container (max-width: 375px) {
+        .range-row {
+          display: block;
+        }
+        .range-row .range-item {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+        }
+        .range-row .time-label {
+          display: block;
+        }
+        .range-row .time-separator {
+          display: none;
+        }
       }
       .error-message {
         color: var(--error-color);
