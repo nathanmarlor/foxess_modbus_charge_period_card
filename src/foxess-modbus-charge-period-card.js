@@ -8,26 +8,23 @@ import {
 (await window.loadCardHelpers()).createRowElement({ type: 'input-datetime-entity' });
 
 class FoxESSModbusChargePeriodCard extends LitElement {
-  #chargePeriods = [];
+  #hass = null;
 
-  #validationMessage = null;
+  #entityIds = null;
 
-  constructor() {
-    super();
-
-    this.#chargePeriods = [{
-      start: '00:00', end: '00:01', enableForceCharge: true, enableChargeFromGrid: true,
-    }];
-  }
+  #inverterId = '';
 
   static get properties() {
     return {
       hass: {},
-      '#chargePeriods': {
+      _loadError: {
+        state: true,
+      },
+      _chargePeriods: {
         state: true,
         type: Array,
       },
-      '#validationMessage': {
+      _validationMessage: {
         state: true,
         type: String,
       },
@@ -35,13 +32,21 @@ class FoxESSModbusChargePeriodCard extends LitElement {
     };
   }
 
+  constructor() {
+    super();
+
+    this._loadError = null;
+    this._chargePeriods = null;
+    this._validationMessage = null;
+  }
+
   get hass() {
-    return this._hass;
+    return this.#hass;
   }
 
   set hass(hass) {
-    this._hass = hass;
-    this.#loadEntityIds();
+    this.#hass = hass;
+    this.#loadChargePeriods();
   }
 
   async setConfig(config) {
@@ -49,12 +54,103 @@ class FoxESSModbusChargePeriodCard extends LitElement {
   }
 
   async #loadEntityIds() {
+    if (this.#entityIds == null) {
+      this._loadError = null;
+      try {
+        const result = await this.#hass.callWS({ type: 'foxess_modbus/get_charge_periods', inverter: this.#inverterId });
+        this.#entityIds = result.charge_periods.map((period) => ({
+          periodStartEntityId: period.period_start_entity_id,
+          periodEndEntityId: period.period_end_entity_id,
+          enableForceChargeEntityId: period.enable_force_charge_entity_id,
+          enableChargeFromGridEntityId: period.enable_charge_from_grid_entity_id,
+        }));
+      } catch (error) {
+        this.#entityIds = null;
+        if (error.code === 'unknown_error') {
+          this._loadError = error.message;
+        }
+        console.log(error);
+      }
+    }
+  }
+
+  async #handleSave() {
+    if (this.#hass == null) {
+      return;
+    }
+
+    const data = [];
+    for (const chargePeriod of this._chargePeriods) {
+      const period = {
+        enable_force_charge: chargePeriod.enableForceCharge,
+        enable_charge_from_grid: chargePeriod.enableChargeFromGrid,
+      };
+      if (chargePeriod.enableForceCharge) {
+        period.start = chargePeriod.start;
+        period.end = chargePeriod.end;
+      }
+      data.push(period);
+    }
+
     try {
-      const result = await this._hass.callWS({ type: 'foxess_modbus/get_charge_periods', inverter: '' });
-      console.log(result);
+      await this.#hass.callService('foxess_modbus', 'update_all_charge_periods', { inverter: this.#inverterId, charge_periods: data });
     } catch (error) {
       console.log(error);
+      this._validationMessage = error.message;
     }
+  }
+
+  async #loadChargePeriods() {
+    if (this.#hass == null) {
+      this._chargePeriods = null;
+      return;
+    }
+
+    if (this.#entityIds == null) {
+      await this.#loadEntityIds();
+    } else {
+      // If we can't find any of the entity IDs, they might have changed. Re-fetch
+      for (const chargePeriod of this.#entityIds) {
+        if (!(chargePeriod.periodStartEntityId in this.#hass.states)
+          || !(chargePeriod.periodEndEntityId in this.#hass.states)
+          || !(chargePeriod.enableForceChargeEntityId in this.#hass.states)
+          || !(chargePeriod.enableChargeFromGridEntityId in this.#hass.states)) {
+          await this.#loadEntityIds(); // eslint-disable-line no-await-in-loop
+          break;
+        }
+      }
+    }
+
+    if (this.#entityIds == null) {
+      this._chargePeriods = null;
+      return;
+    }
+    const chargePeriods = [];
+    for (const chargePeriod of this.#entityIds) {
+      chargePeriods.push({
+        start: this.#hass.states[chargePeriod.periodStartEntityId].state,
+        end: this.#hass.states[chargePeriod.periodEndEntityId].state,
+        enableForceCharge: this.#hass.states[chargePeriod.enableForceChargeEntityId].state === 'on',
+        enableChargeFromGrid: this.#hass.states[chargePeriod.enableChargeFromGridEntityId].state === 'on',
+      });
+    }
+    this._chargePeriods = chargePeriods;
+  }
+
+  #renderChargePeriods() {
+    return html`
+      ${this._chargePeriods.map((x) => this.#renderChargePeriod(x))}
+
+      <p>${this._validationMessage}</p>
+
+      <div class="button-row">
+        <mwc-button label="Reset"></mwc-button>
+        <mwc-button
+          label="Save"
+          ?disabled=${this._validationMessage != null}
+          @click=${this.#handleSave}></mwc-button>
+      </div>
+    `;
   }
 
   #renderChargePeriod(chargePeriod) {
@@ -87,34 +183,36 @@ class FoxESSModbusChargePeriodCard extends LitElement {
     `;
   }
 
+  #renderError() {
+    if (this._loadError != null) {
+      return html`<p>${this._loadError}</p>`;
+    }
+
+    return html`<p>Unable to load charge periods. Is foxess-modbus installed and configured?</p>`;
+  }
+
   render() {
+    const content = this._chargePeriods == null
+      ? this.#renderError()
+      : this.#renderChargePeriods();
     return html`
       <ha-card header="Charge Windows">
         <div class="card-content">
-          ${this.#renderChargePeriod(this.#chargePeriods[0])}
-
-          <p>${this.#validationMessage}</p>
-
-          <div class="button-row">
-            <mwc-button label="Reset"></mwc-button>
-            <mwc-button
-              label="Save"
-              ?disabled=${this.#validationMessage != null}></mwc-button>
-          </div>
+          ${content}
         </div>
       </ha-card>
     `;
   }
 
   #inputChanged() {
-    console.log(this.#chargePeriods);
+    // console.log(this._chargePeriods);
     this.requestUpdate();
 
-    if (this.#chargePeriods[0].enableForceCharge) {
-      this.#validationMessage = 'Test...';
-    } else {
-      this.#validationMessage = null;
-    }
+    // if (this._chargePeriods[0].enableForceCharge) {
+    //   this._validationMessage = 'Test...';
+    // } else {
+    //   this._validationMessage = null;
+    // }
   }
 
   static get styles() {

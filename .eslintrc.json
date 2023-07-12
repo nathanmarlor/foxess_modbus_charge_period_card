@@ -8,18 +8,19 @@
         "ecmaVersion": "latest"
     },
     "rules": {
-        "no-underscore-dangle": [
-            "error",
-            {
-                "allowAfterThis": true
-            }
-        ],
         "import/no-unresolved": "off",
         "import/extensions": "off",
+        "no-restricted-syntax": "off",
         "no-param-reassign": [
             "error",
             {
                 "props": false
+            }
+        ],
+        "no-underscore-dangle": [
+            "error",
+            {
+                "allowAfterThis": true
             }
         ]
     }
