@@ -22,6 +22,10 @@ class FoxESSModbusChargePeriodCard extends LitElement {
       _loadError: {
         state: true,
       },
+      _friendlyName: {
+        state: true,
+        type: String,
+      },
       _userChargePeriods: {
         state: true,
         type: Array,
@@ -38,6 +42,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
     super();
 
     this._loadError = null;
+    this._friendlyName = null;
     this._userChargePeriods = null;
     this._canSave = false;
   }
@@ -85,6 +90,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
           enableForceChargeEntityId: period.enable_force_charge_entity_id,
           enableChargeFromGridEntityId: period.enable_charge_from_grid_entity_id,
         }));
+        this._friendlyName = result.friendly_name;
       } catch (error) {
         this.#entityIds = null;
         if (error.code === 'unknown_error') {
@@ -314,8 +320,11 @@ class FoxESSModbusChargePeriodCard extends LitElement {
     const content = this._userChargePeriods == null
       ? this.#renderError()
       : this.#renderChargePeriods();
+    const friendlyName = this._friendlyName
+      ? ` (${this._friendlyName})`
+      : '';
     return html`
-      <ha-card header="Charge Periods">
+      <ha-card header="Charge Periods${friendlyName}">
         <div class="card-content">
           ${content}
         </div>
