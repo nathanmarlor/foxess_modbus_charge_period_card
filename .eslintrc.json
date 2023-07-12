@@ -13,6 +13,7 @@
         "no-restricted-syntax": "off",
         "no-plusplus": "off",
         "max-classes-per-file": "off",
+        "class-methods-use-this": "off",
         "max-len": [
             "error",
             {

@@ -76,6 +76,10 @@ class FoxESSModbusChargePeriodCard extends LitElement {
     return { inverter: '' };
   }
 
+  getCardSize() {
+    return 10;// We're about 500px high, each unit is 50px
+  }
+
   async #loadEntityIds() {
     if (this.#entityIds == null) {
       this._loadError = null;
@@ -342,6 +346,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
       fieldset {
         margin: 8px 8px 16px 8px;
         padding: 0 8px;
+        min-width: 0;
         border: 1px solid lightgray;
         border-radius: 4px;
       }
@@ -361,6 +366,8 @@ class FoxESSModbusChargePeriodCard extends LitElement {
         margin: 8px;
         justify-content: center;
         align-items: center;
+        flex-flow: row wrap;
+        row-gap: 5px;
       }
       .time-separator {
         height: 1px;
@@ -418,7 +425,6 @@ class FoxESSModbusChargePeriodCardEditor extends LitElement {
     this.dispatchEvent(event);
   }
 
-  // eslint-disable-next-line class-methods-use-this
   #computeLabel() {
     return 'Inverter';
   }
