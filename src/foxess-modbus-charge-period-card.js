@@ -26,9 +26,9 @@ class FoxESSModbusChargePeriodCard extends LitElement {
         state: true,
         type: Array,
       },
-      _validationMessage: {
+      _canSave: {
         state: true,
-        type: String,
+        type: Boolean,
       },
       config: {},
     };
@@ -39,7 +39,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
 
     this._loadError = null;
     this._userChargePeriods = null;
-    this._validationMessage = null;
+    this._canSave = false;
   }
 
   get hass() {
@@ -157,6 +157,54 @@ class FoxESSModbusChargePeriodCard extends LitElement {
     }
 
     this._userChargePeriods = newUserChargePeriods;
+    this.#updateValidation();
+  }
+
+  #updateValidation() {
+    if (this._userChargePeriods == null) {
+      return;
+    }
+
+    for (let i = 0; i < this._userChargePeriods.length; i++) {
+      const chargePeriod = this._userChargePeriods[i];
+
+      chargePeriod.validationMessage = null;
+
+      if (chargePeriod.enableForceCharge) {
+        const startDate = new Date(`1970-01-01T${chargePeriod.start}Z`);
+        const endDate = new Date(`1970-01-01T${chargePeriod.end}Z`);
+        if (endDate <= startDate) {
+          chargePeriod.validationMessage = 'End time must be after start time';
+        } else {
+          for (let j = 0; j < i; j++) {
+            const otherPeriod = this._userChargePeriods[j];
+            if (otherPeriod.enableForceCharge) {
+              const otherStart = new Date(`1970-01-01T${otherPeriod.start}Z`);
+              const otherEnd = new Date(`1970-01-01T${otherPeriod.end}Z`);
+              if (otherStart < endDate && startDate < otherEnd) {
+                chargePeriod.validationMessage = 'Charge period must not overlap other period '
+                  + `${otherPeriod.start}-${otherPeriod.end}`;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    let anyFailed = false;
+    for (const chargePeriod of this._userChargePeriods) {
+      if (chargePeriod.validationMessage != null) {
+        anyFailed = true;
+        break;
+      }
+    }
+
+    this._canSave = !anyFailed;
+  }
+
+  #inputChanged() {
+    this.#updateValidation();
+    this.requestUpdate();
   }
 
   async #handleSave() {
@@ -184,7 +232,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
       });
     } catch (error) {
       console.log(error);
-      this._validationMessage = error.message;
+      this._loadError = error.message;
     }
   }
 
@@ -197,24 +245,25 @@ class FoxESSModbusChargePeriodCard extends LitElement {
     return html`
       ${this._userChargePeriods.map((x) => this.#renderChargePeriod(x))}
 
-      <p>${this._validationMessage}</p>
-
       <div class="button-row">
         <mwc-button
           label="Reset"
           @click=${this.#handleReset}></mwc-button>
         <mwc-button
           label="Save"
-          ?disabled=${this._validationMessage != null}
+          ?disabled=${!this._canSave}
           @click=${this.#handleSave}></mwc-button>
       </div>
     `;
   }
 
   #renderChargePeriod(chargePeriod) {
+    const validationMessage = chargePeriod.validationMessage == null
+      ? null
+      : html`<p>${chargePeriod.validationMessage}</p>`;
     return html`
       <div class="toggle-row">
-        <p>Enable force charge:</p>
+        <p>Enable charge period:</p>
         <ha-switch
           ?checked=${chargePeriod.enableForceCharge}
           @change=${(e) => { chargePeriod.enableForceCharge = e.target.checked; this.#inputChanged(); }}></ha-switch>
@@ -238,6 +287,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
           ?disabled=${!chargePeriod.enableForceCharge}
           @value-changed=${(e) => { chargePeriod.end = e.target.value; this.#inputChanged(); }}></ha-time-input>
       </div>
+      ${validationMessage}
     `;
   }
 
@@ -260,17 +310,6 @@ class FoxESSModbusChargePeriodCard extends LitElement {
         </div>
       </ha-card>
     `;
-  }
-
-  #inputChanged() {
-    // console.log(this._chargePeriods);
-    this.requestUpdate();
-
-    // if (this._chargePeriods[0].enableForceCharge) {
-    //   this._validationMessage = 'Test...';
-    // } else {
-    //   this._validationMessage = null;
-    // }
   }
 
   static get styles() {
