@@ -296,22 +296,19 @@ class FoxESSModbusChargePeriodCard extends LitElement {
             @change=${(e) => { chargePeriod.enableChargeFromGrid = e.target.checked; this.#inputChanged(); }}></ha-switch>
         </div>
         <div class="range-row">
-          <div class="range-item"><span class="time-label">From:</span>
+          <span class="time-label">Start:</span>
           <ha-time-input
             .value=${chargePeriod.start}
             .locale=${this.hass.locale}
             ?disabled=${!chargePeriod.enableForceCharge}
             @value-changed=${(e) => { chargePeriod.start = e.target.value; this.#inputChanged(); }}></ha-time-input>
-          </div>
           <div class="time-separator"></div>
-          <div class="range-row">
-          <div class="range-item"><span class="time-label">To:</span>
-            <ha-time-input
-              .value=${chargePeriod.end}
-              .locale=${this.hass.locale}
-              ?disabled=${!chargePeriod.enableForceCharge}
-              @value-changed=${(e) => { chargePeriod.end = e.target.value; this.#inputChanged(); }}></ha-time-input>
-          </div>
+          <span class="time-label">End:</span>
+          <ha-time-input
+            .value=${chargePeriod.end}
+            .locale=${this.hass.locale}
+            ?disabled=${!chargePeriod.enableForceCharge}
+            @value-changed=${(e) => { chargePeriod.end = e.target.value; this.#inputChanged(); }}></ha-time-input>
         </div>
         ${validationMessage}
       </fieldset>
@@ -386,12 +383,9 @@ class FoxESSModbusChargePeriodCard extends LitElement {
       }
       @container (max-width: 375px) {
         .range-row {
-          display: block;
-        }
-        .range-row .range-item {
-          display: flex;
-          align-items: center;
-          gap: 5px;
+          display: grid;
+          grid-template-columns: auto auto;
+          column-gap: 8px;
         }
         .range-row .time-label {
           display: block;
