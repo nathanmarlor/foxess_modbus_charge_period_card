@@ -2,6 +2,7 @@ import {
   LitElement,
   html,
   css,
+  unsafeCSS,
 } from 'https://unpkg.com/lit-element@2.0.1/lit-element.js?module';
 
 // Get access to ha-time-input
@@ -15,6 +16,8 @@ class FoxESSModbusChargePeriodCard extends LitElement {
   #loadedChargePeriods = [];
 
   #inverterId = '';
+
+  #lastLocale = null;
 
   static get properties() {
     return {
@@ -30,6 +33,10 @@ class FoxESSModbusChargePeriodCard extends LitElement {
         state: true,
         type: Array,
       },
+      _useAmPm: {
+        state: true,
+        type: Boolean,
+      },
       _canSave: {
         state: true,
         type: Boolean,
@@ -44,6 +51,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
     this._loadError = null;
     this._friendlyName = null;
     this._userChargePeriods = null;
+    this._useAmPm = true;
     this._canSave = false;
   }
 
@@ -53,6 +61,11 @@ class FoxESSModbusChargePeriodCard extends LitElement {
 
   set hass(hass) {
     this.#hass = hass;
+    if (hass.locale !== this.#lastLocale) {
+      this.#lastLocale = hass.locale;
+      this._useAmPm = this.#useAmPm(hass.locale);
+      console.log('Use am/pm: ', this._useAmPm);
+    }
     this.#onInputsChanged();
   }
 
@@ -220,6 +233,16 @@ class FoxESSModbusChargePeriodCard extends LitElement {
     this._canSave = !anyFailed;
   }
 
+  #useAmPm(locale) {
+    // Adapted from https://github.com/home-assistant/frontend/blob/9b3710f8bdf7c5c63dc2089b6f95b5237656af3b/src/common/datetime/use_am_pm.ts
+    if (locale.time_format === 'language' || locale.time_format === 'system') {
+      const testLanguage = locale.time_format === 'language' ? locale.language : undefined;
+      const test = new Date('January 1, 2023 22:00:00').toLocaleString(testLanguage);
+      return test.includes('10');
+    }
+    return locale.time_format === '12';
+  }
+
   #inputChanged() {
     this.#updateValidation();
     this.requestUpdate();
@@ -280,7 +303,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
       ? null
       : html`<p class="error-message">${chargePeriod.validationMessage}</p>`;
     return html`
-      <fieldset>
+      <fieldset class="${this._useAmPm ? 'time-has-am-pm' : 'time-has-no-am-pm'}">
         <legend>Charge Period ${index + 1}</legend>
         <div class="toggle-row">
           <p>Enable charge period:</p>
@@ -299,14 +322,14 @@ class FoxESSModbusChargePeriodCard extends LitElement {
           <span class="time-label">Start:</span>
           <ha-time-input
             .value=${chargePeriod.start}
-            .locale=${this.hass.locale}
+            .locale=${this.#hass.locale}
             ?disabled=${!chargePeriod.enableForceCharge}
             @value-changed=${(e) => { chargePeriod.start = e.target.value; this.#inputChanged(); }}></ha-time-input>
           <div class="time-separator"></div>
           <span class="time-label">End:</span>
           <ha-time-input
             .value=${chargePeriod.end}
-            .locale=${this.hass.locale}
+            .locale=${this.#hass.locale}
             ?disabled=${!chargePeriod.enableForceCharge}
             @value-changed=${(e) => { chargePeriod.end = e.target.value; this.#inputChanged(); }}></ha-time-input>
         </div>
@@ -340,6 +363,21 @@ class FoxESSModbusChargePeriodCard extends LitElement {
   }
 
   static get styles() {
+    function narrowStyle(cls) {
+      return css`
+      .${unsafeCSS(cls)} .range-row {
+        display: grid;
+        grid-template-columns: auto auto;
+        column-gap: 8px;
+      }
+      .${unsafeCSS(cls)} .range-row .time-label {
+        display: block;
+      }
+      .${unsafeCSS(cls)} .range-row .time-separator {
+        display: none;
+      }
+      `;
+    }
     return css`
       foxess-modbus-charge-period-card {
         padding: 16px;
@@ -382,17 +420,10 @@ class FoxESSModbusChargePeriodCard extends LitElement {
         margin: 0 10px;
       }
       @container (max-width: 375px) {
-        .range-row {
-          display: grid;
-          grid-template-columns: auto auto;
-          column-gap: 8px;
-        }
-        .range-row .time-label {
-          display: block;
-        }
-        .range-row .time-separator {
-          display: none;
-        }
+        ${narrowStyle('time-has-am-pm')}
+      }
+      @container (max-width: 210px) {
+        ${narrowStyle('time-has-no-am-pm')}
       }
       .error-message {
         color: var(--error-color);
