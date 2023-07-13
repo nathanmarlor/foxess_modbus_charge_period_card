@@ -292,6 +292,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
           <p>Enable charge from grid:</p>
           <ha-switch
             ?checked=${chargePeriod.enableChargeFromGrid}
+            ?disabled=${!chargePeriod.enableForceCharge}
             @change=${(e) => { chargePeriod.enableChargeFromGrid = e.target.checked; this.#inputChanged(); }}></ha-switch>
         </div>
         <div class="range-row">
@@ -322,7 +323,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
       return html`<p class="error-message">${this._loadError}</p>`;
     }
 
-    return html`<p>Unable to load charge periods. Is foxess-modbus installed and configured?</p>`;
+    return html`<p class="error-message">Unable to load charge periods. Is foxess-modbus installed and configured?</p>`;
   }
 
   render() {

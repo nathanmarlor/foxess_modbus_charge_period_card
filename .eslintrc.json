@@ -14,6 +14,7 @@
         "no-plusplus": "off",
         "max-classes-per-file": "off",
         "class-methods-use-this": "off",
+        "linebreak-style": "off",
         "max-len": [
             "error",
             {
