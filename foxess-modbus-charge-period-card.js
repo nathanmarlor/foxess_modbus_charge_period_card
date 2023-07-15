@@ -64,7 +64,6 @@ class FoxESSModbusChargePeriodCard extends LitElement {
     if (hass.locale !== this.#lastLocale) {
       this.#lastLocale = hass.locale;
       this._useAmPm = this.#useAmPm(hass.locale);
-      console.log('Use am/pm: ', this._useAmPm);
     }
     this.#onInputsChanged();
   }
@@ -76,9 +75,12 @@ class FoxESSModbusChargePeriodCard extends LitElement {
   }
 
   async #onInputsChanged() {
-    const oldLoadedChargePeriods = this.#loadedChargePeriods;
-    await this.#loadChargePeriods();
-    this.#updateUserChargePeriods(oldLoadedChargePeriods);
+    // If we haven't had hass / the config yet, wait until we get it
+    if (this.#hass != null && this.#inverterId != null) {
+      const oldLoadedChargePeriods = this.#loadedChargePeriods;
+      await this.#loadChargePeriods();
+      this.#updateUserChargePeriods(oldLoadedChargePeriods);
+    }
   }
 
   static getConfigElement() {
