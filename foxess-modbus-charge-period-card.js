@@ -165,6 +165,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
     }
 
     const newUserChargePeriods = [];
+    let isSameAsPrevious = true;
 
     for (let i = 0; i < this.#loadedChargePeriods.length; i++) {
       const loadedPeriod = this.#loadedChargePeriods[i];
@@ -184,13 +185,16 @@ class FoxESSModbusChargePeriodCard extends LitElement {
           enableForceCharge: loadedPeriod.enableForceCharge,
           enableChargeFromGrid: loadedPeriod.enableChargeFromGrid,
         });
+        isSameAsPrevious = false;
       } else {
         newUserChargePeriods.push(this._userChargePeriods[i]);
       }
     }
 
-    this._userChargePeriods = newUserChargePeriods;
-    this.#updateValidation();
+    if (!isSameAsPrevious) {
+      this._userChargePeriods = newUserChargePeriods;
+      this.#updateValidation();
+    }
   }
 
   #updateValidation() {
