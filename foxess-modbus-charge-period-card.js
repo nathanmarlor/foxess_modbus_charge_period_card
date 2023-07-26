@@ -356,7 +356,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
       : html`<p class="error-message">${chargePeriod.validationMessage}</p>`;
     return html`
       <fieldset class="${this._useAmPm ? 'time-has-am-pm' : 'time-has-no-am-pm'}">
-        <legend>Charge Period ${index + 1}</legend>
+        <legend>Charge Period&nbsp;${index + 1}</legend>
         <div class="toggle-row">
           <p>Enable charge period:</p>
           <ha-switch
@@ -451,16 +451,17 @@ class FoxESSModbusChargePeriodCard extends LitElement {
       .toggle-row {
         display: flex;
         align-items: center;
+        justify-content: space-between;
+        gap: 3px;
       }
       .toggle-row p {
-        flex: 1 0 auto;
         margin: 8px 0;
       }
       .range-row {
         display: flex;
         margin: 8px;
-        justify-content: center;
         align-items: center;
+        justify-content: center;
         row-gap: 5px;
       }
       .range-row .time-label {
