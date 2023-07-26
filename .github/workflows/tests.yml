@@ -14,12 +14,25 @@ env:
   DEFAULT_PYTHON: "3.10"
 
 jobs:
+  eslint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - run: npm install
+      - uses: sibiraj-s/action-eslint@v3
+        with:
+          eslint-args: "--ignore-path=.gitignore --quiet"
+          extensions: "js"
+          annotations: true
   hacs:
     runs-on: "ubuntu-latest"
     name: HACS
     steps:
       - name: Check out the repository
-        uses: "actions/checkout@v3.5.3"
+        uses: "actions/checkout@v3"
 
       - name: HACS validation
         uses: "hacs/action@22.5.0"
