@@ -1,5 +1,8 @@
 # FoxESS - Modbus Charge Period Card
 
+[![GitHub Release][releases-shield]][releases]
+[![License][license-shield]](LICENSE)
+
 ## Introduction
 
 This is lovelace card which works with the [Foxess - Modbus integration](https://github.com/nathanmarlor/foxess_modbus/) to let you set and configure charge periods.
@@ -39,3 +42,9 @@ Then add it to one of your dashboards
 * `Enable charge from grid`: If selected, your batteries will charge from the grid during this period. If deselected, your batteries won't charge or discharge.
 
 After making changes, click "Save" to save them to your inverter.
+
+---
+
+[releases-shield]: https://img.shields.io/github/release/nathanmarlor/foxess_modbus_charge_period_card.svg?style=for-the-badge
+[releases]: https://github.com/nathanmarlor/foxess_modbus_charge_period_card/releases
+[license-shield]: https://img.shields.io/github/license/nathanmarlor/foxess_modbus_charge_period_card.svg?style=for-the-badge
