@@ -12,6 +12,8 @@ This provides the same functionality as the FoxESS app.
 
 ## Installation
 
+First, make sure that you have installed the [Foxess - Modbus integration](https://github.com/nathanmarlor/foxess_modbus/) **version 1.7.0 or higher**, and have configured at least one inverter!
+
 Recommend installation is through [HACS](https://hacs.xyz/).
 
 1. Navigate to "HACS" in the left menu
@@ -25,8 +27,6 @@ Recommend installation is through [HACS](https://hacs.xyz/).
     4. When prompted, click "Reload"
 
 Then add it to one of your dashboards
-
-Make sure that you have set up the [Foxess - Modbus integration](https://github.com/nathanmarlor/foxess_modbus/), and have configured at least one inverter!
 
 1. On a dashboard, select "Edit Dashboard" then "Add Card"
 2. Search for "FoxESS - Modbus: Charge Period Card", and select
