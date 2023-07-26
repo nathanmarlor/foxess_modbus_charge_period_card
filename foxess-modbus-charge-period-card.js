@@ -279,14 +279,18 @@ class FoxESSModbusChargePeriodCard extends LitElement {
     this._canSave = !anyFailed;
   }
 
+  // eslint-disable-next-line no-unused-vars
   #useAmPm(locale) {
-    // Adapted from https://github.com/home-assistant/frontend/blob/9b3710f8bdf7c5c63dc2089b6f95b5237656af3b/src/common/datetime/use_am_pm.ts
-    if (locale.time_format === 'language' || locale.time_format === 'system') {
-      const testLanguage = locale.time_format === 'language' ? locale.language : undefined;
-      const test = new Date('January 1, 2023 22:00:00').toLocaleString(testLanguage);
-      return test.includes('10');
-    }
-    return locale.time_format === '12';
+    // The drop-down for the AM/PM selector doesn't work properly: not sure why
+    // As a workaround, force 24-hour time
+    return false;
+    // // Adapted from https://github.com/home-assistant/frontend/blob/9b3710f8bdf7c5c63dc2089b6f95b5237656af3b/src/common/datetime/use_am_pm.ts
+    // if (locale.time_format === 'language' || locale.time_format === 'system') {
+    //   const testLanguage = locale.time_format === 'language' ? locale.language : undefined;
+    //   const test = new Date('January 1, 2023 22:00:00').toLocaleString(testLanguage);
+    //   return test.includes('10');
+    // }
+    // return locale.time_format === '12';
   }
 
   #inputChanged() {
@@ -345,6 +349,8 @@ class FoxESSModbusChargePeriodCard extends LitElement {
   }
 
   #renderChargePeriod(index, chargePeriod) {
+    // Make sure this is in sync with _useAmPm
+    const locale = { time_format: this._useAmPm ? '12' : '24' };
     const validationMessage = chargePeriod.validationMessage == null
       ? null
       : html`<p class="error-message">${chargePeriod.validationMessage}</p>`;
@@ -368,14 +374,14 @@ class FoxESSModbusChargePeriodCard extends LitElement {
           <span class="time-label">Start:</span>
           <ha-time-input
             .value=${chargePeriod.start}
-            .locale=${this.#hass.locale}
+            .locale=${locale}
             ?disabled=${!chargePeriod.enableForceCharge}
             @value-changed=${(e) => { chargePeriod.start = e.target.value; this.#inputChanged(); }}></ha-time-input>
           <div class="time-separator"></div>
           <span class="time-label">End:</span>
           <ha-time-input
             .value=${chargePeriod.end}
-            .locale=${this.#hass.locale}
+            .locale=${locale}
             ?disabled=${!chargePeriod.enableForceCharge}
             @value-changed=${(e) => { chargePeriod.end = e.target.value; this.#inputChanged(); }}></ha-time-input>
         </div>
