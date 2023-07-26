@@ -9,6 +9,16 @@ import {
 (await window.loadCardHelpers()).createRowElement({ type: 'input-datetime-entity' });
 
 class FoxESSModbusChargePeriodCard extends LitElement {
+  static UnableToConnectError = class extends Error {
+    constructor() {
+      super('Unable to connect');
+    }
+
+    get message() {
+      return html`Unable to connect to integration. Please ensure <a href="https://github.com/nathanmarlor/foxess_modbus">foxess_modbus</a> is installed and configured.`;
+    }
+  };
+
   #hass = null;
 
   #entityIds = null;
@@ -118,7 +128,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
         this.#entityIds = null;
         console.log(error);
         if (error.code === 'unknown_command') {
-          throw Error(html`Unable to connect to integration. Please ensure <a href="https://github.com/nathanmarlor/foxess_modbus">foxess_modbus</a> is installed and configured.`);
+          throw FoxESSModbusChargePeriodCard.UnableToConnectError();
         } else {
           throw error;
         }
@@ -128,7 +138,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
 
   async #loadChargePeriods() {
     try {
-      if (this.#hass == null) {
+      if (this.#hass == null || !this.#hass.connected) {
         this.#loadedChargePeriods = null;
         return;
       }
@@ -411,10 +421,12 @@ class FoxESSModbusChargePeriodCard extends LitElement {
 
   #renderError() {
     if (this._loadError != null) {
+      console.log(this._loadError);
       return html`<p class="error-message">${this._loadError}</p>`;
     }
 
-    return html`<div class="loader"><div class="spinner"></div><p>Loading...</p></div>`;
+    const message = (this.#hass != null && !this.#hass.connected) ? 'Connecting...' : 'Loading...';
+    return html`<div class="loader"><div class="spinner"></div><p>${message}</p></div>`;
     // return html`<p class="error-message">Unable to load charge periods. Is foxess-modbus installed and configured?</p>`;
   }
 
