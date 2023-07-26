@@ -15,7 +15,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
 
   #loadedChargePeriods = [];
 
-  #inverterId = '';
+  #inverterId = null;
 
   #lastLocale = null;
 
@@ -61,7 +61,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
 
   set hass(hass) {
     this.#hass = hass;
-    if (hass.locale !== this.#lastLocale) {
+    if (hass != null && hass.locale !== this.#lastLocale) {
       this.#lastLocale = hass.locale;
       this._useAmPm = this.#useAmPm(hass.locale);
     }
@@ -97,7 +97,6 @@ class FoxESSModbusChargePeriodCard extends LitElement {
 
   async #loadEntityIds() {
     if (this.#entityIds == null) {
-      this._loadError = null;
       try {
         const result = await this.#hass.callWS({
           type: 'foxess_modbus/get_charge_periods',
@@ -112,54 +111,95 @@ class FoxESSModbusChargePeriodCard extends LitElement {
         this._friendlyName = result.friendly_name;
       } catch (error) {
         this.#entityIds = null;
-        if (error.code === 'unknown_error') {
-          this._loadError = error.message;
-        }
         console.log(error);
+        if (error.code === 'unknown_command') {
+          throw Error(html`Unable to connect to integration. Please ensure <a href="https://github.com/nathanmarlor/foxess_modbus">foxess_modbus</a> is installed and configured.`);
+        } else {
+          throw error;
+        }
       }
     }
   }
 
   async #loadChargePeriods() {
-    if (this.#hass == null) {
-      this.#loadedChargePeriods = null;
-      return;
-    }
+    try {
+      if (this.#hass == null) {
+        this.#loadedChargePeriods = null;
+        return;
+      }
 
-    if (this.#entityIds == null) {
-      await this.#loadEntityIds();
-    } else {
-      // If we can't find any of the entity IDs, they might have changed. Re-fetch
-      for (const chargePeriod of this.#entityIds) {
-        if (!(chargePeriod.periodStartEntityId in this.#hass.states)
-          || !(chargePeriod.periodEndEntityId in this.#hass.states)
-          || !(chargePeriod.enableForceChargeEntityId in this.#hass.states)
-          || !(chargePeriod.enableChargeFromGridEntityId in this.#hass.states)) {
-          await this.#loadEntityIds(); // eslint-disable-line no-await-in-loop
-          break;
+      if (this.#entityIds == null) {
+        await this.#loadEntityIds();
+      } else {
+        // If we can't find any of the entity IDs, they might have changed. Re-fetch
+        for (const chargePeriod of this.#entityIds) {
+          if (!(chargePeriod.periodStartEntityId in this.#hass.states)
+            || !(chargePeriod.periodEndEntityId in this.#hass.states)
+            || !(chargePeriod.enableForceChargeEntityId in this.#hass.states)
+            || !(chargePeriod.enableChargeFromGridEntityId in this.#hass.states)) {
+            await this.#loadEntityIds(); // eslint-disable-line no-await-in-loop
+            break;
+          }
         }
       }
-    }
 
-    if (this.#entityIds == null) {
+      if (this.#entityIds == null) {
+        this.#loadedChargePeriods = null;
+        return;
+      }
+
+      const nullEntityIds = [];
+      const checkNullId = (x) => {
+        if (this.#hass.states[x] == null) {
+          nullEntityIds.push(x);
+        }
+      };
+      for (const chargePeriod of this.#entityIds) {
+        checkNullId(chargePeriod.periodStartEntityId);
+        checkNullId(chargePeriod.periodEndEntityId);
+        checkNullId(chargePeriod.enableForceChargeEntityId);
+        checkNullId(chargePeriod.enableChargeFromGridEntityId);
+      }
+      if (nullEntityIds.length > 0) {
+        throw Error(`Unable to load the following entities: ${nullEntityIds.join(', ')}. Make sure they are enabled.`);
+      }
+
+      const chargePeriods = [];
+      for (const chargePeriod of this.#entityIds) {
+        chargePeriods.push({
+          start: this.#hass.states[chargePeriod.periodStartEntityId].state,
+          end: this.#hass.states[chargePeriod.periodEndEntityId].state,
+          enableForceCharge: this.#hass.states[chargePeriod.enableForceChargeEntityId].state === 'on',
+          enableChargeFromGrid: this.#hass.states[chargePeriod.enableChargeFromGridEntityId]?.state === 'on',
+        });
+      }
+
+      this._loadError = null;
+      this.#loadedChargePeriods = chargePeriods;
+    } catch (error) {
+      this._loadError = error.message;
       this.#loadedChargePeriods = null;
-      return;
     }
-    const chargePeriods = [];
-    for (const chargePeriod of this.#entityIds) {
-      chargePeriods.push({
-        start: this.#hass.states[chargePeriod.periodStartEntityId].state,
-        end: this.#hass.states[chargePeriod.periodEndEntityId].state,
-        enableForceCharge: this.#hass.states[chargePeriod.enableForceChargeEntityId].state === 'on',
-        enableChargeFromGrid: this.#hass.states[chargePeriod.enableChargeFromGridEntityId].state === 'on',
-      });
-    }
-
-    this.#loadedChargePeriods = chargePeriods;
   }
 
   #updateUserChargePeriods(oldLoadedChargePeriods) {
     if (this.#loadedChargePeriods == null) {
+      this._userChargePeriods = null;
+      return;
+    }
+
+    const isUnknown = (val) => val === 'unknown' || val === 'unavailable';
+
+    let anyUnknown = false;
+    for (const chargePeriod of this.#loadedChargePeriods) {
+      if (isUnknown(chargePeriod.start) || isUnknown(chargePeriod.end)
+        || isUnknown(chargePeriod.enableChargeFromGrid) || isUnknown(chargePeriod.enableChargeFromGrid)) {
+        anyUnknown = true;
+        break;
+      }
+    }
+
+    if (anyUnknown) {
       this._userChargePeriods = null;
       return;
     }
@@ -279,7 +319,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
       });
     } catch (error) {
       console.log(error);
-      this._loadError = error.message;
+      throw error;
     }
   }
 
@@ -349,7 +389,8 @@ class FoxESSModbusChargePeriodCard extends LitElement {
       return html`<p class="error-message">${this._loadError}</p>`;
     }
 
-    return html`<p class="error-message">Unable to load charge periods. Is foxess-modbus installed and configured?</p>`;
+    return html`<div class="loader"><div class="spinner"></div><p>Loading...</p></div>`;
+    // return html`<p class="error-message">Unable to load charge periods. Is foxess-modbus installed and configured?</p>`;
   }
 
   render() {
@@ -437,6 +478,26 @@ class FoxESSModbusChargePeriodCard extends LitElement {
       .button-row {
         display: flex;
         justify-content: flex-end;
+      }
+      .loader {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      .spinner {
+        display: inline-block;
+        border: 3px solid #f3f3f3; /* Light grey */
+        border-top: 3px solid var(--primary-color);
+        border-radius: 50%;
+        width: 15px;
+        height: 15px;
+        animation: spin 2s linear infinite;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
       }
     `;
   }
