@@ -37,7 +37,11 @@ class FoxESSModbusChargePeriodCard extends LitElement {
         state: true,
         type: Boolean,
       },
-      _canSave: {
+      _validationPassed: {
+        state: true,
+        type: Boolean,
+      },
+      _hasUnsavedChanges: {
         state: true,
         type: Boolean,
       },
@@ -52,7 +56,8 @@ class FoxESSModbusChargePeriodCard extends LitElement {
     this._friendlyName = null;
     this._userChargePeriods = null;
     this._useAmPm = true;
-    this._canSave = false;
+    this._validationPassed = false;
+    this._hasUnsavedChanges = false;
   }
 
   get hass() {
@@ -239,8 +244,12 @@ class FoxESSModbusChargePeriodCard extends LitElement {
 
   #updateValidation() {
     if (this._userChargePeriods == null) {
+      this._validationPassed = false;
+      this._hasUnsavedChanges = false;
       return;
     }
+
+    let anyDiffer = false;
 
     for (let i = 0; i < this._userChargePeriods.length; i++) {
       const chargePeriod = this._userChargePeriods[i];
@@ -266,6 +275,14 @@ class FoxESSModbusChargePeriodCard extends LitElement {
           }
         }
       }
+
+      const loadedChargePeriod = this.#loadedChargePeriods[i];
+      if (loadedChargePeriod.start !== chargePeriod.start
+        || loadedChargePeriod.end !== chargePeriod.end
+        || loadedChargePeriod.enableForceCharge !== chargePeriod.enableForceCharge
+        || loadedChargePeriod.enableChargeFromGrid !== chargePeriod.enableChargeFromGrid) {
+        anyDiffer = true;
+      }
     }
 
     let anyFailed = false;
@@ -276,7 +293,8 @@ class FoxESSModbusChargePeriodCard extends LitElement {
       }
     }
 
-    this._canSave = !anyFailed;
+    this._validationPassed = !anyFailed;
+    this._hasUnsavedChanges = anyDiffer;
   }
 
   // eslint-disable-next-line no-unused-vars
@@ -339,10 +357,11 @@ class FoxESSModbusChargePeriodCard extends LitElement {
       <div class="button-row">
         <mwc-button
           label="Reset"
+          ?disabled=${!this._hasUnsavedChanges}
           @click=${this.#handleReset}></mwc-button>
         <mwc-button
           label="Save"
-          ?disabled=${!this._canSave}
+          ?disabled=${!(this._validationPassed && this._hasUnsavedChanges)}
           @click=${this.#handleSave}></mwc-button>
       </div>
     `;
