@@ -11,11 +11,11 @@ This is lovelace card which works with the [Foxess - Modbus integration](https:/
     <img src="https://github.com/nathanmarlor/foxess_modbus_charge_period_card/blob/main/images/overview.png" width="50%"/>
 </p>
 
-This provides the same functionality as the FoxESS app.
+This provides the same functionality as the FoxESS app. Note that you must connect to your inverter over RS485, and not a direct ethernet connection.
 
 ## Installation
 
-First, make sure that you have installed the [Foxess - Modbus integration](https://github.com/nathanmarlor/foxess_modbus/) **version 1.7.0 or higher**, and have configured at least one inverter!
+First, make sure that you have installed the [Foxess - Modbus integration](https://github.com/nathanmarlor/foxess_modbus/) **version 1.7.0 or higher**, and have configured at least one inverter, using RS485 (and not a direct ethernet connection)!
 
 Recommend installation is through [HACS](https://hacs.xyz/).
 
