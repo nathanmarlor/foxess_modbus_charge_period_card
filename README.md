@@ -8,7 +8,7 @@
 This is lovelace card which works with the [Foxess - Modbus integration](https://github.com/nathanmarlor/foxess_modbus/) to let you set and configure charge periods.
 
 <p align="center">
-    <img src="images/overview.png" width="50%"/>
+    <img src="https://github.com/nathanmarlor/foxess_modbus_charge_period_card/blob/main/images/overview.png" width="50%"/>
 </p>
 
 This provides the same functionality as the FoxESS app.
@@ -22,7 +22,7 @@ Recommend installation is through [HACS](https://hacs.xyz/).
 1. Navigate to "HACS" in the left menu
 2. Select "Frontend"
 3. Hit the menu button (top right) and select "Custom repositories"
-4. Paste [`https://github.com/nathanmarlor/foxess_modbus_charge_period_card`](https://github.com/nathanmarlor/foxess_modbus_charge_period_card) into "Repository", and set "Category" to "Theme"
+4. Paste [`https://github.com/nathanmarlor/foxess_modbus_charge_period_card`](https://github.com/nathanmarlor/foxess_modbus_charge_period_card) into "Repository", and set "Category" to "Lovelace"
 5. Install as usual through HACS:
     1. "Explore & Download Repositories"
     2. Search for "FoxESS - Modbus: Charge Period Card"
