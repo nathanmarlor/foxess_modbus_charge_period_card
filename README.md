@@ -7,15 +7,20 @@
 
 This is lovelace card which works with the [Foxess - Modbus integration](https://github.com/nathanmarlor/foxess_modbus/) to let you set and configure charge periods.
 
+This is supported by the following inverters:
+
+* H1 (including AC1 and AIO) using RS485
+* KH using RS485
+
 <p align="center">
     <img src="https://github.com/nathanmarlor/foxess_modbus_charge_period_card/blob/main/images/overview.png" width="50%"/>
 </p>
 
-This provides the same functionality as the FoxESS app. Note that you must connect to your inverter over RS485, and not a direct ethernet connection.
+This provides the same functionality as the FoxESS app.
 
 ## Installation
 
-First, make sure that you have installed the [Foxess - Modbus integration](https://github.com/nathanmarlor/foxess_modbus/) **version 1.7.0 or higher**, and have configured at least one inverter, using RS485 (and not a direct ethernet connection)!
+First, make sure that you have installed the [Foxess - Modbus integration](https://github.com/nathanmarlor/foxess_modbus/) **version 1.7.0 or higher**, and have configured at least one supported inverter.
 
 Recommend installation is through [HACS](https://hacs.xyz/).
 
