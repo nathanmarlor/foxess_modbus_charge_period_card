@@ -1,0 +1,53 @@
+name: Main
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    tags:
+      - '*'
+  pull_request:
+
+env:
+  DEFAULT_PYTHON: "3.10"
+  NODE_VERSION: 16
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npm install
+      - name: eslint
+        uses: sibiraj-s/action-eslint@v3
+        with:
+          eslint-args: "--ignore-path=.gitignore --quiet"
+          extensions: "js"
+          annotations: true
+      - name: Pack
+        run: npx webpack
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: dist/foxess-modbus-charge-period-card.js
+          draft: true
+          generate_release_notes: true
+  hacs:
+    runs-on: ubuntu-latest
+    name: HACS
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: HACS validation
+        uses: hacs/action@22.5.0
+        with:
+          category: plugin

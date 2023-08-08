@@ -1,12 +1,14 @@
 {
     "env": {
-        "browser": true,
-        "es2021": true
+        "browser": true
     },
     "extends": "airbnb-base",
     "parserOptions": {
-        "ecmaVersion": "latest"
+        "ecmaVersion": 2022
     },
+    "ignorePatterns": [
+        "dist/**"
+    ],
     "rules": {
         "import/no-unresolved": "off",
         "import/extensions": "off",
