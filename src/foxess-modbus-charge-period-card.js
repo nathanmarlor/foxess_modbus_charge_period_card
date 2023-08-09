@@ -3,7 +3,7 @@ import {
   html,
   css,
   unsafeCSS,
-} from 'https://unpkg.com/lit-element@2.0.1/lit-element.js?module';
+} from 'lit';
 
 // Get access to ha-time-input
 (await window.loadCardHelpers()).createRowElement({ type: 'input-datetime-entity' });
