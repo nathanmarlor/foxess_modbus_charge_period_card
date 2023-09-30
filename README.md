@@ -10,7 +10,6 @@ This is lovelace card which works with the [Foxess - Modbus integration](https:/
 This is supported by the following inverters:
 
 * H1 (including AC1 and AIO) using RS485
-* KH using RS485
 
 <p align="center">
     <img src="https://github.com/nathanmarlor/foxess_modbus_charge_period_card/blob/main/images/overview.png" width="50%"/>
