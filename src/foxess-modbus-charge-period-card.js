@@ -269,20 +269,8 @@ class FoxESSModbusChargePeriodCard extends LitElement {
       if (chargePeriod.enableForceCharge) {
         const startDate = new Date(`1970-01-01T${chargePeriod.start}Z`);
         const endDate = new Date(`1970-01-01T${chargePeriod.end}Z`);
-        if (endDate <= startDate) {
-          chargePeriod.validationMessage = 'End time must be after start time';
-        } else {
-          for (let j = 0; j < i; j++) {
-            const otherPeriod = this._userChargePeriods[j];
-            if (otherPeriod.enableForceCharge) {
-              const otherStart = new Date(`1970-01-01T${otherPeriod.start}Z`);
-              const otherEnd = new Date(`1970-01-01T${otherPeriod.end}Z`);
-              if (otherStart < endDate && startDate < otherEnd) {
-                chargePeriod.validationMessage = 'Charge period must not overlap other period '
-                  + `${otherPeriod.start}-${otherPeriod.end}`;
-              }
-            }
-          }
+        if (endDate === startDate) {
+          chargePeriod.validationMessage = 'End time must be different from start time';
         }
       }
 
