@@ -9,6 +9,6 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "lit": "^2.8.0"
+    "lit": "^3.0.0"
   }
 }
