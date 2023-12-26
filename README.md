@@ -21,23 +21,23 @@ This provides the same functionality as the FoxESS app.
 
 First, make sure that you have installed the [Foxess - Modbus integration](https://github.com/nathanmarlor/foxess_modbus/) **version 1.7.0 or higher**, and have configured at least one supported inverter.
 
+[![Quick installation link](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?repository=foxess_modbus_charge_period_card&owner=nathanmarlor&category=frontend)
+
 Recommend installation is through [HACS](https://hacs.xyz/).
 
+Either use [this link](https://my.home-assistant.io/redirect/hacs_repository/?repository=foxess_modbus_charge_period_card&owner=nathanmarlor&category=frontend) or:
 1. Navigate to "HACS" in the left menu
 2. Select "Frontend"
-3. Hit the menu button (top right) and select "Custom repositories"
-4. Paste [`https://github.com/nathanmarlor/foxess_modbus_charge_period_card`](https://github.com/nathanmarlor/foxess_modbus_charge_period_card) into "Repository", and set "Category" to "Lovelace"
-5. Install as usual through HACS:
-    1. "Explore & Download Repositories"
-    2. Search for "FoxESS - Modbus: Charge Period Card"
-    3. Click "Download"
-    4. When prompted, click "Reload"
+3. "Explore & Download Repositories" in the bottom right
+4. Search for "FoxESS - Modbus: Charge Period Card"
+5. Click "Download" in the bottom right
+6. When prompted, click "Reload"
 
 Then add it to one of your dashboards
 
 1. On a dashboard, select "Edit Dashboard" then "Add Card"
 2. Search for "FoxESS - Modbus: Charge Period Card", and select
-3. Select your inverter using the drop-downe
+3. Select your inverter using the drop-down
 4. Click "Save"
 
 ## Usage
