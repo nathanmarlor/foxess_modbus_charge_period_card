@@ -353,14 +353,14 @@ class FoxESSModbusChargePeriodCard extends LitElement {
       ${this._userChargePeriods.map((x, index) => this.#renderChargePeriod(index, x))}
 
       <div class="button-row">
-        <mwc-button
-          label="Reset"
+        <ha-button
+          appearance ="plain"
           ?disabled=${!this._hasUnsavedChanges}
-          @click=${this.#handleReset}></mwc-button>
-        <mwc-button
-          label="Save"
+          @click=${this.#handleReset}>Reset</ha-button>
+        <ha-button
+          appearance ="filled"
           ?disabled=${!(this._validationPassed && this._hasUnsavedChanges)}
-          @click=${this.#handleSave}></mwc-button>
+          @click=${this.#handleSave}>Save</ha-button>
       </div>
     `;
   }
@@ -504,6 +504,7 @@ class FoxESSModbusChargePeriodCard extends LitElement {
       .button-row {
         display: flex;
         justify-content: flex-end;
+        gap: 8px;
       }
       .loader {
         display: flex;
@@ -560,11 +561,15 @@ class FoxESSModbusChargePeriodCardEditor extends LitElement {
   }
 
   #valueChanged(evt) {
+    const newConfig = { ...this._config, ...evt.detail.value };
+    this._config = newConfig;
+
     const event = new Event('config-changed', {
       bubbles: true,
       composed: true,
     });
-    event.detail = { config: evt.detail.value };
+    event.detail = { config: this._config };
+
     this.dispatchEvent(event);
   }
 
