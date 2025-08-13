@@ -561,11 +561,15 @@ class FoxESSModbusChargePeriodCardEditor extends LitElement {
   }
 
   #valueChanged(evt) {
+    const newConfig = { ...this._config, ...evt.detail.value };
+    this._config = newConfig;
+
     const event = new Event('config-changed', {
       bubbles: true,
       composed: true,
     });
-    event.detail = { config: evt.detail.value };
+    event.detail = { config: this._config };
+
     this.dispatchEvent(event);
   }
 
